@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 permissions:
@@ -13,7 +12,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "github-pages"
+  group: github-pages
   cancel-in-progress: true
 
 jobs:
@@ -26,147 +25,32 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-
-      # ==========================================
-      # 1. DOWNLOAD REPOSITORY
-      # ==========================================
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v6
 
-
-      # ==========================================
-      # 2. SETUP GITHUB PAGES
-      # ==========================================
-      - name: Configure GitHub Pages
+      - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-
-      # ==========================================
-      # 3. CHECK WEBSITE FILES
-      # ==========================================
-      - name: Check Website
+      - name: Verify Website
         shell: bash
         run: |
           set -e
 
-          echo "======================================"
-          echo " SADEE X DIMA WEBSITE"
-          echo "======================================"
+          echo "Checking website..."
 
-          echo ""
-          echo "Repository files:"
-          find . -maxdepth 3 -type f | sort
-
-          echo ""
-
-          if [ ! -f "index.html" ]; then
-            echo "❌ ERROR: index.html not found!"
-            echo ""
-            echo "Your index.html must be in the repository root."
-            exit 1
-          fi
+          test -f index.html
+          test -f styles.css || true
+          test -f app.js || true
+          test -d admin || true
 
           echo "✅ index.html found"
+          echo "✅ Website files verified"
 
-
-      # ==========================================
-      # 4. CHECK ADMIN PANEL
-      # ==========================================
-      - name: Check Admin Panel
-        shell: bash
-        run: |
-          echo "======================================"
-          echo " ADMIN PANEL CHECK"
-          echo "======================================"
-
-          if [ -d "admin" ]; then
-            echo "✅ admin folder found"
-
-            if [ -f "admin/index.html" ]; then
-              echo "✅ admin/index.html found"
-            else
-              echo "⚠️ admin/index.html not found"
-            fi
-          else
-            echo "⚠️ admin folder not found"
-            echo "Website will still be deployed."
-          fi
-
-
-      # ==========================================
-      # 5. CHECK WEBSITE ASSETS
-      # ==========================================
-      - name: Check Assets
-        shell: bash
-        run: |
-          echo "======================================"
-          echo " WEBSITE ASSETS"
-          echo "======================================"
-
-          echo ""
-          echo "HTML:"
-          find . -type f -iname "*.html" | sort || true
-
-          echo ""
-          echo "CSS:"
-          find . -type f -iname "*.css" | sort || true
-
-          echo ""
-          echo "JavaScript:"
-          find . -type f -iname "*.js" | sort || true
-
-          echo ""
-          echo "Images:"
-          find . -type f \( \
-            -iname "*.png" -o \
-            -iname "*.jpg" -o \
-            -iname "*.jpeg" -o \
-            -iname "*.webp" -o \
-            -iname "*.gif" -o \
-            -iname "*.svg" \
-          \) | sort || true
-
-          echo ""
-          echo "Videos:"
-          find . -type f \( \
-            -iname "*.mp4" -o \
-            -iname "*.webm" -o \
-            -iname "*.mov" \
-          \) | sort || true
-
-
-      # ==========================================
-      # 6. UPLOAD WEBSITE
-      # ==========================================
-      - name: Upload GitHub Pages Artifact
+      - name: Upload Website
         uses: actions/upload-pages-artifact@v4
         with:
           path: .
 
-
-      # ==========================================
-      # 7. DEPLOY WEBSITE
-      # ==========================================
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-
-      # ==========================================
-      # 8. COMPLETE
-      # ==========================================
-      - name: Deployment Complete
-        shell: bash
-        run: |
-          echo ""
-          echo "======================================"
-          echo " ✅ DEPLOYMENT SUCCESSFUL"
-          echo "======================================"
-          echo ""
-          echo "🌐 SITE:"
-          echo "https://sadee999.github.io/sadeexdima/"
-          echo ""
-          echo "🔐 ADMIN:"
-          echo "https://sadee999.github.io/sadeexdima/admin/"
-          echo ""
-          echo "======================================"
