@@ -1,10 +1,9 @@
-name: SADEE X DIMA - Build & Deploy
+name: SADEE X DIMA - Deploy
 
 on:
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 permissions:
@@ -18,7 +17,6 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy SADEE X DIMA Website
     runs-on: ubuntu-latest
 
     environment:
@@ -27,108 +25,38 @@ jobs:
 
     steps:
 
-      # 1. Checkout repository
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v6
 
-      # 2. Check website files
-      - name: Verify Website
-        shell: bash
+      - name: Check Website
         run: |
-          set -e
+          echo "Checking files..."
 
-          echo "======================================"
-          echo "   SADEE X DIMA WEBSITE CHECK"
-          echo "======================================"
-
-          echo ""
-          echo "Repository files:"
-          find . -maxdepth 3 -type f | sort
-
-          echo ""
-
-          # Main website
           if [ ! -f "index.html" ]; then
-            echo "❌ index.html NOT FOUND"
+            echo "ERROR: index.html not found"
             exit 1
           fi
 
-          echo "✅ index.html found"
+          echo "OK: index.html"
 
-          # CSS
-          if [ -f "styles.css" ]; then
-            echo "✅ styles.css found"
-          else
-            echo "⚠️ styles.css not found"
-          fi
-
-          # JavaScript
-          if [ -f "app.js" ]; then
-            echo "✅ app.js found"
-          else
-            echo "⚠️ app.js not found"
-          fi
-
-          # Config
-          if [ -f "config.js" ]; then
-            echo "✅ config.js found"
-          else
-            echo "⚠️ config.js not found"
-          fi
-
-          # Assets
-          if [ -d "assets" ]; then
-            echo "✅ assets folder found"
-          else
-            echo "⚠️ assets folder not found"
-          fi
-
-          # Admin
           if [ -d "admin" ]; then
-            echo "✅ admin folder found"
-
-            if [ -f "admin/index.html" ]; then
-              echo "✅ admin/index.html found"
-            else
-              echo "⚠️ admin/index.html not found"
-            fi
-          else
-            echo "⚠️ admin folder not found"
+            echo "OK: admin folder"
           fi
 
-          echo ""
-          echo "======================================"
-          echo "       WEBSITE CHECK PASSED"
-          echo "======================================"
+          if [ -d "assets" ]; then
+            echo "OK: assets folder"
+          fi
 
-      # 3. Configure GitHub Pages
+          echo "Website check complete."
+
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      # 4. Upload entire website
       - name: Upload Website
         uses: actions/upload-pages-artifact@v4
         with:
           path: .
 
-      # 5. Deploy
-      - name: Deploy to GitHub Pages
+      - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
-
-      # 6. Show URLs
-      - name: Show Website URLs
-        shell: bash
-        run: |
-          echo ""
-          echo "=============================================="
-          echo "       SADEE X DIMA DEPLOYED"
-          echo "=============================================="
-          echo ""
-          echo "Customer Website:"
-          echo "https://sadee999.github.io/sadeexdima/"
-          echo ""
-          echo "Admin Panel:"
-          echo "https://sadee999.github.io/sadeexdima/admin/"
-          echo ""
-          echo "=============================================="
