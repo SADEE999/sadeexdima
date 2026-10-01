@@ -1,9 +1,10 @@
-name: SADEE X DIMA - Deploy Website
+name: SADEE X DIMA - Build & Deploy
 
 on:
   push:
     branches:
       - main
+
   workflow_dispatch:
 
 permissions:
@@ -12,12 +13,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: github-pages
+  group: sadeexdima-pages
   cancel-in-progress: true
 
 jobs:
   deploy:
-    name: Deploy SADEE X DIMA
+    name: Deploy SADEE X DIMA Website
     runs-on: ubuntu-latest
 
     environment:
@@ -25,32 +26,109 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout
+
+      # 1. Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v6
 
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v5
-
+      # 2. Check website files
       - name: Verify Website
         shell: bash
         run: |
           set -e
 
-          echo "Checking website..."
+          echo "======================================"
+          echo "   SADEE X DIMA WEBSITE CHECK"
+          echo "======================================"
 
-          test -f index.html
-          test -f styles.css || true
-          test -f app.js || true
-          test -d admin || true
+          echo ""
+          echo "Repository files:"
+          find . -maxdepth 3 -type f | sort
+
+          echo ""
+
+          # Main website
+          if [ ! -f "index.html" ]; then
+            echo "❌ index.html NOT FOUND"
+            exit 1
+          fi
 
           echo "✅ index.html found"
-          echo "✅ Website files verified"
 
+          # CSS
+          if [ -f "styles.css" ]; then
+            echo "✅ styles.css found"
+          else
+            echo "⚠️ styles.css not found"
+          fi
+
+          # JavaScript
+          if [ -f "app.js" ]; then
+            echo "✅ app.js found"
+          else
+            echo "⚠️ app.js not found"
+          fi
+
+          # Config
+          if [ -f "config.js" ]; then
+            echo "✅ config.js found"
+          else
+            echo "⚠️ config.js not found"
+          fi
+
+          # Assets
+          if [ -d "assets" ]; then
+            echo "✅ assets folder found"
+          else
+            echo "⚠️ assets folder not found"
+          fi
+
+          # Admin
+          if [ -d "admin" ]; then
+            echo "✅ admin folder found"
+
+            if [ -f "admin/index.html" ]; then
+              echo "✅ admin/index.html found"
+            else
+              echo "⚠️ admin/index.html not found"
+            fi
+          else
+            echo "⚠️ admin folder not found"
+          fi
+
+          echo ""
+          echo "======================================"
+          echo "       WEBSITE CHECK PASSED"
+          echo "======================================"
+
+      # 3. Configure GitHub Pages
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      # 4. Upload entire website
       - name: Upload Website
         uses: actions/upload-pages-artifact@v4
         with:
           path: .
 
+      # 5. Deploy
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      # 6. Show URLs
+      - name: Show Website URLs
+        shell: bash
+        run: |
+          echo ""
+          echo "=============================================="
+          echo "       SADEE X DIMA DEPLOYED"
+          echo "=============================================="
+          echo ""
+          echo "Customer Website:"
+          echo "https://sadee999.github.io/sadeexdima/"
+          echo ""
+          echo "Admin Panel:"
+          echo "https://sadee999.github.io/sadeexdima/admin/"
+          echo ""
+          echo "=============================================="
