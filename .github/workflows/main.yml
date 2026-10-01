@@ -1,9 +1,10 @@
-name: SADEE SOLUTIONS PRO MAX - Deploy
+name: SADEE X DIMA - Deploy Website
 
 on:
   push:
     branches:
       - main
+
   workflow_dispatch:
 
 permissions:
@@ -12,12 +13,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: sadee-solutions-pro-max
+  group: "github-pages"
   cancel-in-progress: true
 
 jobs:
   deploy:
-    name: Build & Deploy PRO MAX
+    name: Deploy SADEE X DIMA
     runs-on: ubuntu-latest
 
     environment:
@@ -26,262 +27,146 @@ jobs:
 
     steps:
 
+      # ==========================================
+      # 1. DOWNLOAD REPOSITORY
+      # ==========================================
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      # --------------------------------------------------
-      # FIND ZIP
-      # --------------------------------------------------
-      - name: Find PRO MAX ZIP
-        shell: bash
-        run: |
-          set -e
 
-          echo "===================================="
-          echo " SEARCHING FOR WEBSITE ZIP"
-          echo "===================================="
-
-          find . -maxdepth 3 -type f | sort
-
-          ZIP_FILE=$(find . \
-            -maxdepth 3 \
-            -type f \
-            -iname "*.zip" \
-            | head -n 1)
-
-          if [ -z "$ZIP_FILE" ]; then
-            echo "❌ No ZIP file found."
-            exit 1
-          fi
-
-          echo "✅ ZIP FOUND:"
-          echo "$ZIP_FILE"
-
-          cp "$ZIP_FILE" website.zip
-
-          ls -lh website.zip
-
-      # --------------------------------------------------
-      # TEST ZIP
-      # --------------------------------------------------
-      - name: Validate ZIP
-        shell: bash
-        run: |
-          set -e
-
-          echo "===================================="
-          echo " VALIDATING ZIP"
-          echo "===================================="
-
-          unzip -t website.zip
-
-          echo "✅ ZIP validation successful"
-
-      # --------------------------------------------------
-      # EXTRACT
-      # --------------------------------------------------
-      - name: Extract PRO MAX Website
-        shell: bash
-        run: |
-          set -e
-
-          rm -rf extracted
-          mkdir -p extracted
-
-          unzip -o website.zip -d extracted
-
-          echo "✅ Website extracted"
-
-      # --------------------------------------------------
-      # FIND INDEX
-      # --------------------------------------------------
-      - name: Detect Website Root
-        shell: bash
-        run: |
-          set -e
-
-          echo "===================================="
-          echo " SEARCHING FOR INDEX.HTML"
-          echo "===================================="
-
-          INDEX_FILE=$(find extracted \
-            -type f \
-            -iname "index.html" \
-            | head -n 1)
-
-          if [ -z "$INDEX_FILE" ]; then
-            echo "❌ index.html was not found."
-
-            echo ""
-            echo "===== EXTRACTED FILES ====="
-
-            find extracted \
-              -maxdepth 8 \
-              -type f \
-              | sort
-
-            exit 1
-          fi
-
-          echo "✅ index.html found:"
-          echo "$INDEX_FILE"
-
-          WEBSITE_ROOT=$(dirname "$INDEX_FILE")
-
-          echo ""
-          echo "Website root:"
-          echo "$WEBSITE_ROOT"
-
-          rm -rf dist
-          mkdir -p dist
-
-          # Preserve the uploaded website files exactly.
-          cp -a "$WEBSITE_ROOT"/. dist/
-
-          echo "✅ Website copied to dist"
-
-      # --------------------------------------------------
-      # VERIFY CUSTOMER SITE
-      # --------------------------------------------------
-      - name: Verify Customer Website
-        shell: bash
-        run: |
-          set -e
-
-          echo "===================================="
-          echo " CUSTOMER WEBSITE CHECK"
-          echo "===================================="
-
-          test -f dist/index.html
-
-          echo "✅ index.html"
-
-          if [ -f dist/styles.css ]; then
-            echo "✅ styles.css"
-          fi
-
-          if [ -f dist/app.js ]; then
-            echo "✅ app.js"
-          fi
-
-          if [ -f dist/config.js ]; then
-            echo "✅ config.js"
-          fi
-
-          if [ -f dist/supabase.sql ]; then
-            echo "✅ supabase.sql"
-          fi
-
-      # --------------------------------------------------
-      # VERIFY ADMIN
-      # --------------------------------------------------
-      - name: Verify Admin Panel
-        shell: bash
-        run: |
-          set -e
-
-          echo "===================================="
-          echo " ADMIN PANEL CHECK"
-          echo "===================================="
-
-          if [ ! -d "dist/admin" ]; then
-            echo "❌ admin folder missing"
-            exit 1
-          fi
-
-          echo "✅ admin folder"
-
-          if [ ! -f "dist/admin/index.html" ]; then
-            echo "❌ admin/index.html missing"
-            exit 1
-          fi
-
-          echo "✅ admin/index.html"
-
-          if [ -f "dist/admin/admin.js" ]; then
-            echo "✅ admin/admin.js"
-          fi
-
-          if [ -f "dist/admin/admin.css" ]; then
-            echo "✅ admin/admin.css"
-          fi
-
-      # --------------------------------------------------
-      # CHECK MEDIA
-      # --------------------------------------------------
-      - name: Verify Images & Videos
-        shell: bash
-        run: |
-          set -e
-
-          echo "===================================="
-          echo " MEDIA CHECK"
-          echo "===================================="
-
-          echo ""
-          echo "Images:"
-
-          find dist \
-            -type f \
-            \( \
-              -iname "*.png" \
-              -o -iname "*.jpg" \
-              -o -iname "*.jpeg" \
-              -o -iname "*.webp" \
-              -o -iname "*.gif" \
-              -o -iname "*.svg" \
-            \) \
-            | sort || true
-
-          echo ""
-          echo "Videos:"
-
-          find dist \
-            -type f \
-            \( \
-              -iname "*.mp4" \
-              -o -iname "*.webm" \
-              -o -iname "*.mov" \
-              -o -iname "*.m4v" \
-            \) \
-            | sort || true
-
-      # --------------------------------------------------
-      # CONFIGURE PAGES
-      # --------------------------------------------------
+      # ==========================================
+      # 2. SETUP GITHUB PAGES
+      # ==========================================
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      # --------------------------------------------------
-      # UPLOAD ARTIFACT
-      # --------------------------------------------------
-      - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist
 
-      # --------------------------------------------------
-      # DEPLOY
-      # --------------------------------------------------
+      # ==========================================
+      # 3. CHECK WEBSITE FILES
+      # ==========================================
+      - name: Check Website
+        shell: bash
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " SADEE X DIMA WEBSITE"
+          echo "======================================"
+
+          echo ""
+          echo "Repository files:"
+          find . -maxdepth 3 -type f | sort
+
+          echo ""
+
+          if [ ! -f "index.html" ]; then
+            echo "❌ ERROR: index.html not found!"
+            echo ""
+            echo "Your index.html must be in the repository root."
+            exit 1
+          fi
+
+          echo "✅ index.html found"
+
+
+      # ==========================================
+      # 4. CHECK ADMIN PANEL
+      # ==========================================
+      - name: Check Admin Panel
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " ADMIN PANEL CHECK"
+          echo "======================================"
+
+          if [ -d "admin" ]; then
+            echo "✅ admin folder found"
+
+            if [ -f "admin/index.html" ]; then
+              echo "✅ admin/index.html found"
+            else
+              echo "⚠️ admin/index.html not found"
+            fi
+          else
+            echo "⚠️ admin folder not found"
+            echo "Website will still be deployed."
+          fi
+
+
+      # ==========================================
+      # 5. CHECK WEBSITE ASSETS
+      # ==========================================
+      - name: Check Assets
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " WEBSITE ASSETS"
+          echo "======================================"
+
+          echo ""
+          echo "HTML:"
+          find . -type f -iname "*.html" | sort || true
+
+          echo ""
+          echo "CSS:"
+          find . -type f -iname "*.css" | sort || true
+
+          echo ""
+          echo "JavaScript:"
+          find . -type f -iname "*.js" | sort || true
+
+          echo ""
+          echo "Images:"
+          find . -type f \( \
+            -iname "*.png" -o \
+            -iname "*.jpg" -o \
+            -iname "*.jpeg" -o \
+            -iname "*.webp" -o \
+            -iname "*.gif" -o \
+            -iname "*.svg" \
+          \) | sort || true
+
+          echo ""
+          echo "Videos:"
+          find . -type f \( \
+            -iname "*.mp4" -o \
+            -iname "*.webm" -o \
+            -iname "*.mov" \
+          \) | sort || true
+
+
+      # ==========================================
+      # 6. UPLOAD WEBSITE
+      # ==========================================
+      - name: Upload GitHub Pages Artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .
+
+
+      # ==========================================
+      # 7. DEPLOY WEBSITE
+      # ==========================================
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
-      # --------------------------------------------------
-      # FINAL STATUS
-      # --------------------------------------------------
+
+      # ==========================================
+      # 8. COMPLETE
+      # ==========================================
       - name: Deployment Complete
         shell: bash
         run: |
           echo ""
-          echo "=============================================="
-          echo "     SADEE SOLUTIONS PRO MAX LIVE"
-          echo "=============================================="
+          echo "======================================"
+          echo " ✅ DEPLOYMENT SUCCESSFUL"
+          echo "======================================"
           echo ""
-          echo "🌐 CUSTOMER WEBSITE:"
-          echo "https://sadee999.github.io/SADEE_SOLUTIONS_STORE/"
+          echo "🌐 SITE:"
+          echo "https://sadee999.github.io/sadeexdima/"
           echo ""
-          echo "🔐 ADMIN PANEL:"
-          echo "https://sadee999.github.io/SADEE_SOLUTIONS_STORE/admin/"
+          echo "🔐 ADMIN:"
+          echo "https://sadee999.github.io/sadeexdima/admin/"
           echo ""
-          echo "=============================================="
+          echo "======================================"
